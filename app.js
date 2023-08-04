@@ -4,12 +4,10 @@ const tronAPI = require('./tronAPI');
 const app = express();
 const PORT = 3000;
 
-// Middleware to set Content Security Policy (CSP)
+// Middleware to enable CORS
 app.use((req, res, next) => {
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; connect-src 'self' https://api.trongrid.io"
-  );
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
 
