@@ -25,6 +25,9 @@ const pool = mysql.createPool({
 });
 
 app.use(bodyParser.json());
+app.use(express.json()); // To parse JSON-encoded bodies
+app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
+
 
 // Middleware to enable CORS
 app.use((req, res, next) => {
@@ -71,7 +74,6 @@ app.post('/login', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const { u_email, u_password, u_username } = req.body;
-
   // Check if the u_email already exists
   pool.query('SELECT * FROM users WHERE u_email = ?', [u_email], async (err, results) => {
     if (err) {
@@ -98,7 +100,7 @@ app.post('/register', async (req, res) => {
       });
     } catch (hashingError) {
       console.error('Hashing error:', hashingError);
-      return res.status(500).json({ message: 'Error hashing password' });
+      return res.status(500).json({ message: u_password });
     }
   });
 });
