@@ -39,12 +39,12 @@ app.get('/transactions/:address', async (req, res) => {
 // Login route
 
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;
+  const { u_email, u_password } = req.body;
 
-  db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) => {
+  db.query('SELECT * FROM users WHERE u_email = ?', [u_email], async (err, results) => {
     if (err) throw err;
 
-    if (results.length === 0 || !(await bcrypt.compare(password, results[0].password))) {
+    if (results.length === 0 || !(await bcrypt.compare(u_password, results[0].password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -55,19 +55,31 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
+  const { u_email, u_password } = req.body;
 
-  // Hash the password
-  const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
-
-  // Insert the user into the database
-  db.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], (err, results) => {
+  // Check if the u_email already exists
+  db.query('SELECT * FROM users WHERE u_email = ?', [u_email], async (err, results) => {
     if (err) {
-      console.error('Registration error:', err);
+      console.error('Database error:', err);
       return res.status(500).json({ message: 'Error registering user' });
     }
 
-    res.json({ message: 'User registered successfully' });
+    if (results.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(u_password, 10);
+
+    // Insert the user into the database
+    db.query('INSERT INTO users (u_email, u_password) VALUES (?, ?)', [u_email, hashedPassword], (err, results) => {
+      if (err) {
+        console.error('Registration error:', err);
+        return res.status(500).json({ message: 'Error registering user' });
+      }
+
+      res.json({ message: 'User registered successfully' });
+    });
   });
 });
 
