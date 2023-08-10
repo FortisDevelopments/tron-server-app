@@ -87,7 +87,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(u_password, 10);
 
     // Insert the user into the database
-    pool.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?)', [u_email, hashedPassword, u_username], (err, results) => {
+    pool.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?, ?)', [u_email, hashedPassword, u_username], (err, results) => {
       if (err) {
         console.error('Registration error:', err);
         return res.status(500).json({ message: 'Error registering user' });
