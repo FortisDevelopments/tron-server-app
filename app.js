@@ -87,9 +87,36 @@ app.post('/register', async (req, res) => {
 
 // });
 
-// app.post('/getInfo', (req, res) => {
+// Protected route to get user data
+app.get('/getInfo', (req, res) => {
+  const token = req.header('x-auth-token'); // Assuming token is sent in the request header
 
-// });
+  if (!token) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = decoded.userId;
+
+    // Fetch user data from the database based on userId
+    db.query('SELECT * FROM users WHERE id = ?', [userId], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ message: 'Error fetching user data' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const user = results[0];
+      res.json(user);
+    });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+});
 
 // app.post('/registerAffiliated', (req, res) => {
 
