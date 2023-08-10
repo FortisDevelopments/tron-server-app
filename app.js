@@ -1,18 +1,23 @@
 const express = require('express');
-const tronAPI = require('./tronAPI');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql');
+const bcrypt = require('bcrypt'); // Import bcrypt library
+
+const tronAPI = require('./requests/tronAPI');
+
 
 const app = express();
 const PORT = 3000;
 const SECRET_KEY = 'your-secret-key';
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'your-username',
-  password: 'your-password',
-  database: 'your-database-name'
+  host: 'tron-db.cb8qw8k6tzdf.us-east-1.rds.amazonaws.com',
+  user: 'admin',
+  password: 'Vitriolix2023$.',
+  database: 'tron-db'
 });
+
+app.use(bodyParser.json());
 
 // Middleware to enable CORS
 app.use((req, res, next) => {
@@ -31,26 +36,56 @@ app.get('/transactions/:address', async (req, res) => {
   }
 });
 
-app.use(bodyParser.json());
-
 // Login route
+
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  // Find user by username
-  db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
+  db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) => {
     if (err) throw err;
 
-    if (results.length === 0 || results[0].password !== password) {
+    if (results.length === 0 || !(await bcrypt.compare(password, results[0].password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Create a JWT token
     const token = jwt.sign({ userId: results[0].id }, SECRET_KEY, { expiresIn: '1h' });
 
     res.json({ token });
   });
 });
+
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
+
+  // Insert the user into the database
+  db.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], (err, results) => {
+    if (err) {
+      console.error('Registration error:', err);
+      return res.status(500).json({ message: 'Error registering user' });
+    }
+
+    res.json({ message: 'User registered successfully' });
+  });
+});
+
+// app.post('/registerAffiliated', (req, res) => {
+
+// });
+
+// app.post('/getInfo', (req, res) => {
+
+// });
+
+// app.post('/registerAffiliated', (req, res) => {
+
+// });
+
+// app.post('/verifyTransaction', (req, res) => {
+//   // u id, t id, sus
+// });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
