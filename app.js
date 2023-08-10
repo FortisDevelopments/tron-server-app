@@ -55,7 +55,7 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { u_email, u_password } = req.body;
+  const { u_email, u_password, u_username } = req.body;
 
   // Check if the u_email already exists
   db.query('SELECT * FROM users WHERE u_email = ?', [u_email], async (err, results) => {
@@ -72,7 +72,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(u_password, 10);
 
     // Insert the user into the database
-    db.query('INSERT INTO users (u_email, u_password) VALUES (?, ?)', [u_email, hashedPassword], (err, results) => {
+    db.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?)', [u_email, hashedPassword, u_username], (err, results) => {
       if (err) {
         console.error('Registration error:', err);
         return res.status(500).json({ message: 'Error registering user' });
@@ -81,7 +81,7 @@ app.post('/register', async (req, res) => {
       res.json({ message: 'User registered successfully' });
     });
   });
-});
+}); 
 
 // app.post('/registerAffiliated', (req, res) => {
 
