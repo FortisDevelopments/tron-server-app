@@ -26,6 +26,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (req, res) => {
+	res.json({ message: "Hello World"  });
+})
+
+app.get("/health-check", (req, res) => {
+	res.json({ message: "Server up and running"  });
+})
+
 app.get('/transactions/:address', async (req, res) => {
   const address = req.params.address;
   try {
