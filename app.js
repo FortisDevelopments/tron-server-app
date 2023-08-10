@@ -10,7 +10,17 @@ const tronAPI = require('./requests/tronAPI');
 
 const app = express();
 const PORT = 3000;
-const SECRET_KEY = 'your-secret-key';
+const SECRET_KEY = '7958827dbf1f4b1d4492fcbad782274802d3d3aff041e975b36d3e1f120935f8';
+
+// const crypto = require('crypto');
+
+// // Generate a secure random buffer (32 bytes)
+// const secretKeyBuffer = crypto.randomBytes(32);
+
+// // Convert the buffer to a hexadecimal string
+// const secretKey = secretKeyBuffer.toString('hex');
+
+// console.log('Generated Secret Key:', secretKey);
 
 // Create a MySQL connection pool
 const pool = mysql.createPool({
@@ -56,20 +66,22 @@ app.get('/transactions/:address', async (req, res) => {
 
 // Login route
 
-app.post('/login', (req, res) => {
-  const { u_email, u_password } = req.body;
+app.post('/login', async (req, res) => {
+  try {
+    const { u_email, u_password } = req.body;
 
-  pool.query('SELECT * FROM users WHERE u_email = ?', [u_email], async (err, results) => {
-    if (err) throw err;
+    const [user] = await pool.query('SELECT id, password FROM users WHERE u_email = ?', [u_email]);
 
-    if (results.length === 0 || !(await bcrypt.compare(u_password, results[0].password))) {
+    if (!user || !(await bcrypt.compare(u_password, user.password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: results[0].id }, SECRET_KEY, { expiresIn: '1h' });
-    console.log("Generated token:", token);
+    const token = jwt.sign({ userId: user.id }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ token });
-  });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'An error occurred during login' });
+  }
 });
 
 app.post('/register', async (req, res) => {
