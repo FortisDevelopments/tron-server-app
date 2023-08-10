@@ -83,20 +83,25 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Username already exists' });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(u_password, 10);
+    try {
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(u_password, 10);
 
-    // Insert the user into the database
-    pool.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?, ?)', [u_email, hashedPassword, u_username], (err, results) => {
-      if (err) {
-        console.error('Registration error:', err);
-        return res.status(500).json({ message: 'Error registering user' });
-      }
+      // Insert the user into the database
+      pool.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?, ?)', [u_email, hashedPassword, u_username], (err, results) => {
+        if (err) {
+          console.error('Registration error:', err);
+          return res.status(500).json({ message: 'Error registering user' });
+        }
 
-      res.json({ message: 'User registered successfully' });
-    });
+        res.json({ message: 'User registered successfully' });
+      });
+    } catch (hashingError) {
+      console.error('Hashing error:', hashingError);
+      return res.status(500).json({ message: 'Error hashing password' });
+    }
   });
-}); 
+});
 
 
 app.post('/registerAffiliated', async (req, res) => {
