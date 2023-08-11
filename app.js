@@ -47,6 +47,11 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cors({
+  origin: 'http://localhost:3000', // Replace with the actual origin of your frontend app
+  allowedHeaders: ['x-auth-token'], // Allow only the specified headers
+}));
+
 app.get("/", (req, res) => {
 	res.json({ message: "Hello World"  });
 })
