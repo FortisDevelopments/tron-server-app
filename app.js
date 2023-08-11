@@ -82,7 +82,7 @@ app.post('/login', async (req, res) => {
 
     connection.release(); // Release the connection back to the pool
 
-    if (rows.length === 0 || !(await bcrypt.compare(u_password, rows[0].password))) {
+    if (rows.length === 0 || !(await bcrypt.compare(u_password, rows[0].u_password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -90,6 +90,7 @@ app.post('/login', async (req, res) => {
     res.json({ token });
   } catch (error) {
     console.error('Error during login:', error);
+    console.error(req.body);
     res.status(500).json({ message: 'An error occurred during login' });
   }
 });
