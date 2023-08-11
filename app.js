@@ -72,9 +72,13 @@ app.post('/login', async (req, res) => {
   try {
     const { u_email, u_password } = req.body;
 
+    if (!u_email || !u_password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     const connection = await pool.getConnection();
 
-    const [rows] = await connection.execute('SELECT id, password FROM users WHERE u_email = ?', [u_email]);
+    const [rows] = await connection.execute('SELECT u_email, u_password FROM users WHERE u_email = ?', [u_email]);
 
     connection.release(); // Release the connection back to the pool
 
