@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
 // const mysql = require('mysql2');
 const bcrypt = require('bcrypt'); // Import bcrypt library
-const cors = require('cors'); // Import the cors package
+// const cors = require('cors'); // Import the cors package
 
 const tronAPI = require('./requests/tronAPI');
 
@@ -43,15 +43,16 @@ app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 
 // Middleware to enable CORS
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Replace with your frontend's origin
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-auth-token'); // Add x-auth-token here
+    next();
 });
 
-app.use(cors({
-  origin: 'http://localhost:3000', // Replace with the actual origin of your frontend app
-  allowedHeaders: ['x-auth-token'], // Allow only the specified headers
-}));
+// app.use(cors({
+//   origin: 'http://localhost:3001', // Replace with the actual origin of your frontend app
+//   allowedHeaders: ['x-auth-token'], // Allow only the specified headers
+// }));
 
 app.get("/", (req, res) => {
 	res.json({ message: "Hello World"  });
