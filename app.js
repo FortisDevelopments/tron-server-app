@@ -86,7 +86,7 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: rows[0].id }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: rows[0].u_email }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
     console.error('Error during login:', error);
@@ -147,7 +147,7 @@ app.post('/registerAffiliated', async (req, res) => {
     const hashedPassword = await bcrypt.hash(u_password, 10);
 
     // Insert the user into the database
-    pool.query('INSERT INTO users (u_email, u_password, u_username, u_afiliado) VALUES (?, ?)', [u_email, hashedPassword, u_username, u_afiliado], (err, results) => {
+    pool.query('INSERT INTO users (u_email, u_password, u_username, u_afiliado) VALUES (?,?,?,?)', [u_email, hashedPassword, u_username, u_afiliado], (err, results) => {
       if (err) {
         console.error('Registration error:', err);
         return res.status(500).json({ message: 'Error registering user' });
@@ -160,7 +160,7 @@ app.post('/registerAffiliated', async (req, res) => {
 
 
 // Protected route to get user data
-app.get('/getInfo', (req, res) => {
+app.get('/getInfo',async (req, res) => {
   const token = req.header('x-auth-token'); // Assuming token is sent in the request header
 
   if (!token) {
@@ -168,25 +168,22 @@ app.get('/getInfo', (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const decoded = jwt.decode(token, SECRET_KEY);
     const userId = decoded.userId;
+    console.error(userId)
 
-    // Fetch user data from the database based on userId
-    pool.query('SELECT * FROM users WHERE id = ?', [userId], (err, results) => {
-      if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({ message: 'Error fetching user data' });
-      }
+    // Use the pool to execute the query using promises
+    const [results, fields] = await pool.query('SELECT * FROM users WHERE u_email = ?', [userId]);
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-      const user = results[0];
-      res.json(user);
-    });
+    const user = results[0];
+    res.json(user);
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+    console.error('Database error:', error);
+    res.status(500).json({ message: 'Error fetching user data' });
   }
 });
 
