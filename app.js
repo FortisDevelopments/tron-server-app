@@ -2,7 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 // const mysql = require('mysql');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
+// const mysql = require('mysql2');
 const bcrypt = require('bcrypt'); // Import bcrypt library
 
 const tronAPI = require('./requests/tronAPI');
@@ -66,17 +67,22 @@ app.get('/transactions/:address', async (req, res) => {
 
 // Login route
 
+
 app.post('/login', async (req, res) => {
   try {
     const { u_email, u_password } = req.body;
 
-    const [user] = await pool.query('SELECT id, password FROM users WHERE u_email = ?', [u_email]);
+    const connection = await pool.getConnection();
 
-    if (!user || !(await bcrypt.compare(u_password, user.password))) {
+    const [rows] = await connection.execute('SELECT id, password FROM users WHERE u_email = ?', [u_email]);
+
+    connection.release(); // Release the connection back to the pool
+
+    if (rows.length === 0 || !(await bcrypt.compare(u_password, rows[0].password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user.id }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: rows[0].id }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
     console.error('Error during login:', error);
