@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
 // const mysql = require('mysql2');
 const bcrypt = require('bcrypt'); // Import bcrypt library
+const cors = require('cors'); // Import the cors package
 
 const tronAPI = require('./requests/tronAPI');
 
