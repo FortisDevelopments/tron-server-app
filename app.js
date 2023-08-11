@@ -47,6 +47,11 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cors({
+  origin: 'http://localhost:3001', // Replace with the actual origin of your frontend app
+  allowedHeaders: ['x-auth-token'], // Allow only the specified headers
+}));
+
 app.get("/", (req, res) => {
 	res.json({ message: "Hello World"  });
 })
@@ -170,10 +175,23 @@ app.get('/getInfo',async (req, res) => {
   try {
     const decoded = jwt.decode(token, SECRET_KEY);
     const userId = decoded.userId;
+<<<<<<< Updated upstream
     console.error(userId)
 
     // Use the pool to execute the query using promises
     const [results, fields] = await pool.query('SELECT * FROM users WHERE u_email = ?', [userId]);
+=======
+    console.error(decoded);
+    console.error(userId);
+
+    // Fetch user data from the database based on userId
+    pool.query('SELECT * FROM users WHERE u_email = ?', [userId], (err, results) => {
+      console.error("query");
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ message: 'Error fetching user data' });
+      }
+>>>>>>> Stashed changes
 
     if (results.length === 0) {
       return res.status(404).json({ message: 'User not found' });
