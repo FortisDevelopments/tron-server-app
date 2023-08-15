@@ -163,21 +163,42 @@ app.post('/registerAffiliated', async (req, res) => {
       res.json({ message: 'User registered successfully' });
     });
   });
-}); 
+});
+
+app.post('/updatePlan', async (req, res) => {
+  const { u_id, u_subscription_type } = req.body;
+  console.error(u_subscription_type)
+  pool.query('UPDATE users set u_subscription_type = ? where u_id = ?', [u_subscription_type, u_id], async (err, results) => {
+    console.error("queryey")
+    // if (err) {
+    //   console.error('Database error:', err);
+    //   return res.status(500).json({ message: 'Error updating plan' });
+    // }
+
+
+    res.json({ message: 'Plan updated successfully' });
+  });
+});
 
 
 // Protected route to get user data
 app.get('/getInfo',async (req, res) => {
   const token = req.header('x-auth-token'); // Assuming token is sent in the request header
-
+ 
   if (!token) {
     return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
+  console.error(token)
+  const decoded = jwt.decode(token, SECRET_KEY);
+  console.error(decoded)
+  const userId = decoded.userId
+  console.error(userId)
+
 
   try {
-    const decoded = jwt.decode(token, SECRET_KEY);
-    const userId = decoded.userId;
-    console.error(userId)
+
+
+
 
     // Use the pool to execute the query using promises
     const [results, fields] = await pool.query('SELECT * FROM users WHERE u_email = ?', [userId]);
@@ -192,7 +213,10 @@ app.get('/getInfo',async (req, res) => {
     console.error('Database error:', error);
     res.status(500).json({ message: 'Error fetching user data' });
   }
+
 });
+
+
 
 // app.post('/verifyTransaction', (req, res) => {
 //   // u id, t id, sus
