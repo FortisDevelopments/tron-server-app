@@ -166,18 +166,36 @@ app.post('/registerAffiliated', async (req, res) => {
 });
 
 app.post('/updatePlan', async (req, res) => {
-  const { u_id, u_subscription_type } = req.body;
-  console.error(u_subscription_type)
-  pool.query('UPDATE users set u_subscription_type = ? where u_id = ?', [u_subscription_type, u_id], async (err, results) => {
-    console.error("queryey")
-    // if (err) {
-    //   console.error('Database error:', err);
-    //   return res.status(500).json({ message: 'Error updating plan' });
-    // }
+  const { u_id, u_wallet_id, u_subscription_type } = req.body;
+  // console.error(u_subscription_type)
+  // pool.query('UPDATE users SET u_subscription_type = ?, u_wallet_id = ? where u_id = ?', [u_subscription_type, u_wallet_id,  u_id], async (err, results) => {
+  //   console.error("queryey")
+  //   // if (err) {
+  //   //   console.error('Database error:', err);
+  //   //   return res.status(500).json({ message: 'Error updating plan' });
+  //   // }
 
 
-    res.json({ message: 'Plan updated successfully' });
-  });
+  //   res.json({ message: 'Plan updated successfully' });
+  // });
+
+   // Update the user data in the database
+   const connection = await pool.getConnection();
+   try {
+     await connection.beginTransaction();
+
+     await connection.query('UPDATE users SET u_subscription_type = ?, u_wallet_id = ? where u_id = ?', [u_subscription_type, u_wallet_id,  u_id]);
+
+     await connection.commit();
+     res.json({ message: 'User info updated successfully' });
+   } catch (error) {
+     await connection.rollback();
+     console.error('Database error:', error);
+     res.status(500).json({ message: 'Error updating user info' });
+   } finally {
+     connection.release();
+   }
+
 });
 
 
