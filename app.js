@@ -148,9 +148,8 @@ app.post('/registerAffiliated', async (req, res) => {
 });
 
 app.post('/updatePlan', async (req, res) => {
-<<<<<<< Updated upstream
   const {u_wallet_id,u_transactions, u_subscription_type } = req.body;
-  const token = req.header('x-auth-token'); 
+  const token = req.header('x-auth-token');
 
   if (!token) {
     return res.status(401).json({ message: 'Access denied. No token provided.' });
@@ -161,9 +160,6 @@ app.post('/updatePlan', async (req, res) => {
   const userId = decoded.userId
   console.error(userId)
 
-=======
-  const { u_id, u_wallet_id, u_subscription_type } = req.body;
->>>>>>> Stashed changes
 
    // Update the user data in the database
    const connection = await pool.getConnection();
