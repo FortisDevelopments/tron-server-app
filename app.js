@@ -1,12 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
-// const mysql = require('mysql');
 const mysql = require('mysql2/promise');
-// const mysql = require('mysql2');
 const bcrypt = require('bcrypt'); // Import bcrypt library
-// const cors = require('cors'); // Import the cors package
-
+const util = require('util');
 const tronAPI = require('./requests/tronAPI');
 
 
@@ -49,32 +46,39 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.use(cors({
-//   origin: 'http://localhost:3001', // Replace with the actual origin of your frontend app
-//   allowedHeaders: ['x-auth-token'], // Allow only the specified headers
-// }));
-
-app.get("/", (req, res) => {
-	res.json({ message: "Hello World"  });
-})
-
 app.get("/health-check", (req, res) => {
 	res.json({ message: "Server up and running"  });
 })
 
-app.get('/transactions/:address', async (req, res) => {
-  const address = req.params.address;
+// const query = util.promisify(pool.query).bind(pool);
+
+// Register route
+
+app.post('/register', async (req, res) => {
+  const { u_email, u_password, u_username } = req.body;
+
   try {
-    const transactions = await tronAPI.getTransactionsByAddress(address);
-    res.json(transactions);
+    // Check if the u_email already exists
+    const [results] = await pool.query('SELECT * FROM users WHERE u_email = ?', [u_email]);
+
+    if (results.length > 0) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(u_password, 10);
+
+    // Insert the user into the database
+    await pool.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?, ?)', [u_email, hashedPassword, u_username]);
+
+    res.json({ message: 'User registered successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Error registering user' });
   }
 });
 
 // Login route
-
-
 app.post('/login', async (req, res) => {
   try {
     const { u_email, u_password } = req.body;
@@ -102,37 +106,15 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/register', async (req, res) => {
-  const { u_email, u_password, u_username } = req.body;
-  // Check if the u_email already exists
-  pool.query('SELECT * FROM users WHERE u_email = ?', [u_email], async (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ message: 'Error registering user' });
-    }
 
-    if (results.length > 0) {
-      return res.status(400).json({ message: 'Username already exists' });
-    }
-
-    try {
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(u_password, 10);
-
-      // Insert the user into the database
-      pool.query('INSERT INTO users (u_email, u_password, u_username) VALUES (?, ?, ?)', [u_email, hashedPassword, u_username], (err, results) => {
-        if (err) {
-          console.error('Registration error:', err);
-          return res.status(500).json({ message: 'Error registering user' });
-        }
-
-        res.json({ message: 'User registered successfully' });
-      });
-    } catch (hashingError) {
-      console.error('Hashing error:', hashingError);
-      return res.status(500).json({ message: u_password });
-    }
-  });
+app.get('/transactions/:address', async (req, res) => {
+  const address = req.params.address;
+  try {
+    const transactions = await tronAPI.getTransactionsByAddress(address);
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 
@@ -166,6 +148,7 @@ app.post('/registerAffiliated', async (req, res) => {
 });
 
 app.post('/updatePlan', async (req, res) => {
+<<<<<<< Updated upstream
   const {u_wallet_id,u_transactions, u_subscription_type } = req.body;
   const token = req.header('x-auth-token'); 
 
@@ -178,6 +161,9 @@ app.post('/updatePlan', async (req, res) => {
   const userId = decoded.userId
   console.error(userId)
 
+=======
+  const { u_id, u_wallet_id, u_subscription_type } = req.body;
+>>>>>>> Stashed changes
 
    // Update the user data in the database
    const connection = await pool.getConnection();
@@ -214,10 +200,6 @@ app.get('/getInfo',async (req, res) => {
 
 
   try {
-
-
-
-
     // Use the pool to execute the query using promises
     const [results, fields] = await pool.query('SELECT * FROM users WHERE u_email = ?', [userId]);
 
@@ -233,8 +215,6 @@ app.get('/getInfo',async (req, res) => {
   }
 
 });
-
-
 
 // app.post('/verifyTransaction', (req, res) => {
 //   // u id, t id, sus
