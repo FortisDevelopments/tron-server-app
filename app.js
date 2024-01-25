@@ -154,11 +154,11 @@ app.post('/updatePlan', async (req, res) => {
   if (!token) {
     return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
-  console.error(token)
+  // console.error(token)
   const decoded = jwt.decode(token, SECRET_KEY);
   console.error(decoded)
   const userId = decoded.userId
-  console.error(userId)
+  // console.error(userId)
 
 
    // Update the user data in the database
@@ -188,11 +188,10 @@ app.get('/getInfo',async (req, res) => {
   if (!token) {
     return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
-  console.error(token)
+  console.error("get info token: " + token)
   const decoded = jwt.decode(token, SECRET_KEY);
-  console.error(decoded)
   const userId = decoded.userId
-  console.error(userId)
+  const exptime=decoded.exp
 
 
   try {
@@ -204,7 +203,43 @@ app.get('/getInfo',async (req, res) => {
     }
 
     const user = results[0];
+    user['expiration']=exptime;
     res.json(user);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ message: 'Error fetching user data' });
+  }
+
+});
+
+//getfull user data ADMIN ONLY
+
+app.get('/getfulldata',async (req, res) => {
+  const token = req.header('x-auth-token'); // Assuming token is sent in the request header
+ 
+  if (!token) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
+  }
+  console.error("get full data: ")
+  const decoded = jwt.decode(token, SECRET_KEY);
+  const userId = decoded.userId
+
+  if (userId!='pwdis@pass123.com') {
+    console.error('error not allowed')
+    return res.status(401).json({ message: 'Access denied. User not allowed' });
+  }
+  
+
+
+  try {
+    // Use the pool to execute the query using promises
+    const [results] = await pool.query('SELECT u_username, u_email, u_subscription_type, u_plan_start_date, u_plan_end_date FROM users');
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(results);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ message: 'Error fetching user data' });
